@@ -1,22 +1,24 @@
 #!/bin/bash
-
 set -e
+
+UPLINK_IFACE=eth0
+WLAN_IFACE=wlan0
+AP_IP=192.168.4.1
 
 echo "[+] Updating system"
 apt update && apt upgrade -y
 
 echo "[+] Installing packages"
-apt install -y hostapd dnsmasq nginx iptables-persistent
-sudo apt-get install dhcpcd5 -y
+apt install -y hostapd dnsmasq nginx iptables-persistent dhcpcd5
 
 echo "[+] Stopping services for config"
-systemctl stop hostapd
-systemctl stop dnsmasq
+systemctl stop hostapd || true
+systemctl stop dnsmasq || true
 
-echo "[+] Configuring static IP for wlan0"
+echo "[+] Configuring static IP for ${WLAN_IFACE}"
 cat <<EOF > /etc/dhcpcd.conf
-interface wlan0
-static ip_address=192.168.4.1/24
+interface ${WLAN_IFACE}
+static ip_address=${AP_IP}/24
 nohook wpa_supplicant
 EOF
 
@@ -24,7 +26,7 @@ systemctl restart dhcpcd
 
 echo "[+] Configuring hostapd"
 cat <<EOF > /etc/hostapd/hostapd.conf
-interface=wlan0
+interface=${WLAN_IFACE}
 driver=nl80211
 ssid=MyRedirectWiFi
 hw_mode=g
@@ -37,30 +39,42 @@ wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 EOF
 
-sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
+# Ensure hostapd knows where its config is
+sed -i 's|^#\?DAEMON_CONF=.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd || true
 
 systemctl unmask hostapd
 systemctl enable hostapd
 
 echo "[+] Configuring dnsmasq"
-mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+if [ ! -f /etc/dnsmasq.conf.orig ]; then
+  mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+fi
 
 cat <<EOF > /etc/dnsmasq.conf
-interface=wlan0
+interface=${WLAN_IFACE}
 dhcp-range=192.168.4.50,192.168.4.150,12h
 
-address=/facebook.com/192.168.4.1
-address=/youtube.com/192.168.4.1
+address=/facebook.com/${AP_IP}
+address=/youtube.com/${AP_IP}
 EOF
 
 echo "[+] Enabling IP forwarding"
-sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-sysctl -p
+# Enable immediately
+sysctl -w net.ipv4.ip_forward=1 >/dev/null
+
+# Make persistent (modern, safe)
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-ipforward.conf
+sysctl --system >/dev/null
 
 echo "[+] Setting up NAT"
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+iptables -t nat -C POSTROUTING -o ${UPLINK_IFACE} -j MASQUERADE 2>/dev/null || \
+iptables -t nat -A POSTROUTING -o ${UPLINK_IFACE} -j MASQUERADE
+
+iptables -C FORWARD -i ${UPLINK_IFACE} -o ${WLAN_IFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
+iptables -A FORWARD -i ${UPLINK_IFACE} -o ${WLAN_IFACE} -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+iptables -C FORWARD -i ${WLAN_IFACE} -o ${UPLINK_IFACE} -j ACCEPT 2>/dev/null || \
+iptables -A FORWARD -i ${WLAN_IFACE} -o ${UPLINK_IFACE} -j ACCEPT
 
 netfilter-persistent save
 
