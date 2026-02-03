@@ -7,6 +7,7 @@ apt update && apt upgrade -y
 
 echo "[+] Installing packages"
 apt install -y hostapd dnsmasq nginx iptables-persistent
+sudo apt-get install dhcpcd5 -y
 
 echo "[+] Stopping services for config"
 systemctl stop hostapd
