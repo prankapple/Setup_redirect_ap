@@ -42,8 +42,10 @@ EOF
 # Ensure hostapd knows where its config is
 sed -i 's|^#\?DAEMON_CONF=.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd || true
 
-systemctl unmask hostapd
-systemctl enable hostapd
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl daemon-reload
+sudo systemctl restart hostapd
 
 echo "[+] Configuring dnsmasq"
 if [ ! -f /etc/dnsmasq.conf.orig ]; then
