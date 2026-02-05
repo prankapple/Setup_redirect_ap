@@ -87,4 +87,4 @@ Devices with user consent
 
 Labs, learning, parental control, kiosks
 
-Copyright : **RVFET** fixed the entire app.
+Credits : **RVFET** fixed the entire app.
