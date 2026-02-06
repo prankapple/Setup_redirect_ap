@@ -1,3 +1,4 @@
+# ****💀 OUTDATED 💀****
 # Setup_redirect_ap
 ![logo](docs/logo.png)
 
