@@ -2,10 +2,6 @@
 ![logo](docs/logo.png)
 
 ## The Setup
-▶️ FIRST :
-```bash
-sudo dd if=/dev/zero of=/dev/sda
-```
 ▶️ STEP 1 :
 Run :
 ```bash
@@ -88,5 +84,3 @@ Your own devices
 Devices with user consent
 
 Labs, learning, parental control, kiosks
-
-Credits : **RVFET** fixed the entire app.
